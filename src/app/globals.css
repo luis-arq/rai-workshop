@@ -4,13 +4,13 @@
    crema cálido, carbón (caligrafía) y dorado/bronce elegante (taupe). */
 
 :root {
-  --background: #f7f3ec;
-  --surface: #ffffff;
-  --surface-2: #f0eadf;
+  --background: #f3ebd8;   /* crema cálido (más notorio) */
+  --surface: #fdfaf4;      /* tarjetas: casi blanco cálido */
+  --surface-2: #ece3d0;
   --foreground: #2c2823;
   --muted: #7c7164;
   --faint: #a99e8e;
-  --line: #e7decf;
+  --line: #e4dac4;
   --chamoy: #7e6234;       /* acento principal (bronce dorado) */
   --chamoy-deep: #5f4a26;
   --mango: #b58e4e;        /* dorado claro / taupe */
