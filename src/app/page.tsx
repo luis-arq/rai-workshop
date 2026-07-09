@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function Home() {
   return (
@@ -12,8 +13,7 @@ export default function Home() {
 
       {/* Nav mínima */}
       <header className="mx-auto flex w-full max-w-5xl items-center gap-3 px-6 pt-8">
-        <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-chamoy to-mango shadow-lg shadow-chamoy/30" />
-        <span className="font-display text-xl font-semibold tracking-tight">Samai</span>
+        <Logo height="h-16" />
         <span className="ml-auto font-mono text-xs text-faint">Barras de snacks para eventos</span>
       </header>
 

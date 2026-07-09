@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
@@ -39,8 +40,7 @@ export default function LoginPage() {
         className="w-full max-w-sm rounded-3xl border border-line bg-surface p-8 shadow-xl"
       >
         <div className="mb-6 flex items-center gap-2">
-          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-chamoy to-mango" />
-          <span className="font-display text-xl font-semibold">Samai</span>
+          <Logo height="h-11" />
           <span className="ml-auto text-xs text-faint">Panel admin</span>
         </div>
 

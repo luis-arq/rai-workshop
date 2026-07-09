@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { requireAdmin } from "@/lib/auth";
 import { signOut } from "@/lib/admin-actions";
 
@@ -23,8 +24,7 @@ export default async function AdminLayout({
       <header className="sticky top-0 z-20 border-b border-line bg-background/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center gap-4 px-5 py-3">
           <Link href="/admin" className="flex items-center gap-2">
-            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-chamoy to-mango" />
-            <span className="font-display text-lg font-semibold">Samai</span>
+            <Logo height="h-9" />
             <span className="text-xs text-faint">admin</span>
           </Link>
           <nav className="ml-4 hidden gap-1 sm:flex">

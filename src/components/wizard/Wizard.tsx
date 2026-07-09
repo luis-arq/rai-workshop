@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { OPCIONES_INVITADOS } from "@/lib/catalog";
 import { categoriaDe, paqueteDe } from "@/lib/catalog-helpers";
 import {
@@ -177,8 +178,7 @@ export default function Wizard({
       <header className="sticky top-0 z-20 border-b border-line bg-background/85 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-5 py-3">
           <Link href="/" className="flex items-center gap-2">
-            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-chamoy to-mango" />
-            <span className="font-display text-lg font-semibold">Samai</span>
+            <Logo height="h-10" />
           </Link>
           <div className="ml-auto flex items-center gap-3">
             <span className="font-mono text-xs text-faint">
