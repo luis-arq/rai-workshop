@@ -1,32 +1,35 @@
 @import "tailwindcss";
 
+/* Paleta armonizada con el logo de Samai:
+   crema cálido, carbón (caligrafía) y dorado/bronce elegante (taupe). */
+
 :root {
-  --background: #fbf6f2;
+  --background: #f7f3ec;
   --surface: #ffffff;
-  --surface-2: #f6eee8;
-  --foreground: #2a1721;
-  --muted: #6e5762;
-  --faint: #9c8791;
-  --line: #eadfd7;
-  --chamoy: #c92a5b;
-  --chamoy-deep: #7a1f44;
-  --mango: #e08a28;
-  --lime: #6fa334;
+  --surface-2: #f0eadf;
+  --foreground: #2c2823;
+  --muted: #7c7164;
+  --faint: #a99e8e;
+  --line: #e7decf;
+  --chamoy: #7e6234;       /* acento principal (bronce dorado) */
+  --chamoy-deep: #5f4a26;
+  --mango: #b58e4e;        /* dorado claro / taupe */
+  --lime: #7b8752;         /* verde salvia (éxito) */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #191016;
-    --surface: #231620;
-    --surface-2: #2c1c27;
-    --foreground: #f7ece6;
-    --muted: #cbb2bc;
-    --faint: #947986;
-    --line: #3a2733;
-    --chamoy: #f2578f;
-    --chamoy-deep: #f58fb4;
-    --mango: #f0ae5e;
-    --lime: #9bd05a;
+    --background: #1e1913;
+    --surface: #29231b;
+    --surface-2: #342c22;
+    --foreground: #f3ecdf;
+    --muted: #c3b4a0;
+    --faint: #8c7f6d;
+    --line: #3b3227;
+    --chamoy: #95753f;
+    --chamoy-deep: #7e6234;
+    --mango: #c0a05e;
+    --lime: #9aa86e;
   }
 }
 
