@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #fbf6f2;
+  --surface: #ffffff;
+  --surface-2: #f6eee8;
+  --foreground: #2a1721;
+  --muted: #6e5762;
+  --faint: #9c8791;
+  --line: #eadfd7;
+  --chamoy: #c92a5b;
+  --chamoy-deep: #7a1f44;
+  --mango: #e08a28;
+  --lime: #6fa334;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #191016;
+    --surface: #231620;
+    --surface-2: #2c1c27;
+    --foreground: #f7ece6;
+    --muted: #cbb2bc;
+    --faint: #947986;
+    --line: #3a2733;
+    --chamoy: #f2578f;
+    --chamoy-deep: #f58fb4;
+    --mango: #f0ae5e;
+    --lime: #9bd05a;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-chamoy: var(--chamoy);
+  --color-chamoy-deep: var(--chamoy-deep);
+  --color-mango: var(--mango);
+  --color-lime: var(--lime);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Animaciones suaves reutilizables */
+@keyframes samai-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes samai-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-rise { animation: samai-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.animate-pop { animation: samai-pop 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise, .animate-pop { animation: none; }
+  * { scroll-behavior: auto !important; }
 }

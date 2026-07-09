@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Documentos de negocio confidenciales (solo locales, NO subir)
+/*.docx
+/*.pptx
+/*.xlsx
+/*.pdf
+
+# Config local del editor / herramientas
+/.claude/
