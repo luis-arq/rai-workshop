@@ -19,6 +19,8 @@ interface Row {
   correo: string | null;
   telefono: string | null;
   paquete: string | null;
+  barra: string | null;
+  barra_emoji: string | null;
 }
 
 const ESTADOS = [
@@ -51,10 +53,12 @@ export default async function CotizacionesPage() {
   const rows = (await sql`
     select co.id, co.invitados, co.total, co.estado, co.canal,
            co.fecha_evento, co.hora, co.lugar, co.comentarios, co.creada_en,
-           cl.nombre, cl.correo, cl.telefono, p.nombre as paquete
+           cl.nombre, cl.correo, cl.telefono, p.nombre as paquete,
+           tb.nombre as barra, tb.emoji as barra_emoji
     from cotizaciones co
     left join clientes cl on cl.id = co.cliente_id
     left join paquetes p on p.id = co.paquete_id
+    left join tipos_barra tb on tb.id = co.tipo_barra_id
     order by co.creada_en desc`) as unknown as Row[];
 
   return (
@@ -97,6 +101,11 @@ export default async function CotizacionesPage() {
                   {c.correo && <span>{c.correo}</span>}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+                  {c.barra && (
+                    <span className="font-medium text-foreground">
+                      {c.barra_emoji} {c.barra}
+                    </span>
+                  )}
                   <span>🎁 {c.paquete ?? "—"}</span>
                   <span>👥 {c.invitados ?? "—"} invitados</span>
                   <span>

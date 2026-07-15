@@ -20,6 +20,7 @@ import type {
   Extra,
   Paquete,
   Seleccion,
+  TipoBarra,
 } from "@/lib/types";
 import ProductGrid from "./ProductGrid";
 import SummaryPanel from "./SummaryPanel";
@@ -35,9 +36,11 @@ type Paso =
 export default function Wizard({
   catalogo,
   ajustes,
+  tipoBarra,
 }: {
   catalogo: Catalogo;
   ajustes: Ajustes;
+  tipoBarra?: TipoBarra;
 }) {
   // Los pasos de categoría se derivan del catálogo (orden de la DB).
   const PASOS: Paso[] = useMemo(
@@ -180,6 +183,19 @@ export default function Wizard({
           <Link href="/" className="flex items-center gap-2">
             <Logo height="h-10" />
           </Link>
+          {tipoBarra && (
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="text-sm font-medium">
+                {tipoBarra.emoji} {tipoBarra.nombre}
+              </span>
+              <Link
+                href="/configura"
+                className="text-xs font-semibold text-chamoy hover:underline"
+              >
+                Cambiar
+              </Link>
+            </div>
+          )}
           <div className="ml-auto flex items-center gap-3">
             <span className="font-mono text-xs text-faint">
               Paso {pasoIdx + 1} de {PASOS.length}
@@ -233,6 +249,7 @@ export default function Wizard({
                 seleccion={seleccion}
                 catalogo={catalogo}
                 ajustes={ajustes}
+                tipoBarraId={tipoBarra?.id ?? ""}
               />
             )}
           </div>
@@ -623,10 +640,12 @@ function StepResumen({
   seleccion,
   catalogo,
   ajustes,
+  tipoBarraId,
 }: {
   seleccion: Seleccion;
   catalogo: Catalogo;
   ajustes: Ajustes;
+  tipoBarraId: string;
 }) {
   const paquete = paqueteDe(catalogo, seleccion.paqueteId);
   const cot = calcularCotizacion(seleccion, catalogo, ajustes);
@@ -690,7 +709,7 @@ function StepResumen({
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
-            guardarCotizacion(seleccion, "whatsapp").catch(() => {});
+            guardarCotizacion(seleccion, "whatsapp", tipoBarraId).catch(() => {});
           }}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-4 text-base font-semibold text-white shadow-lg shadow-[#25D366]/25 transition-transform hover:scale-[1.02]"
         >
@@ -699,7 +718,7 @@ function StepResumen({
         <a
           href={linkCorreo(seleccion, catalogo, ajustes)}
           onClick={() => {
-            guardarCotizacion(seleccion, "correo").catch(() => {});
+            guardarCotizacion(seleccion, "correo", tipoBarraId).catch(() => {});
           }}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-line bg-surface px-6 py-4 text-base font-semibold transition-colors hover:bg-surface-2"
         >

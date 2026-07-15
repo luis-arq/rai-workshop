@@ -1,5 +1,7 @@
 import { sql } from "@/lib/db";
+import { getTiposBarra } from "@/lib/db-catalog";
 import { updateProducto } from "@/lib/admin-actions";
+import BarSelector from "@/components/admin/BarSelector";
 
 export const dynamic = "force-dynamic";
 
@@ -10,16 +12,25 @@ interface Row {
   precio_extra: string;
   disponible: boolean;
   categoria: string;
-  cat_orden: number;
-  prod_orden: number;
 }
 
-export default async function ProductosPage() {
-  const rows = (await sql`
-    select p.id, p.nombre, p.emoji, p.precio_extra, p.disponible,
-           c.nombre as categoria, c.orden as cat_orden, p.orden as prod_orden
-    from productos p join categorias c on c.id = p.categoria_id
-    order by c.orden, p.orden`) as unknown as Row[];
+export default async function ProductosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ barra?: string }>;
+}) {
+  const { barra } = await searchParams;
+  const tipos = await getTiposBarra();
+  const activo = tipos.find((t) => t.slug === barra) ?? tipos[0];
+
+  const rows = activo
+    ? ((await sql`
+        select p.id, p.nombre, p.emoji, p.precio_extra, p.disponible,
+               c.nombre as categoria
+        from productos p join categorias c on c.id = p.categoria_id
+        where c.tipo_barra_id = ${activo.id}
+        order by c.orden, p.orden`) as unknown as Row[])
+    : [];
 
   const grupos = new Map<string, Row[]>();
   for (const r of rows) {
@@ -34,11 +45,22 @@ export default async function ProductosPage() {
         Productos
       </h1>
       <p className="mt-1 text-muted">
-        Edita nombre, precio extra y disponibilidad. Guarda cada fila para
-        aplicar.
+        Elige la barra y edita nombre, precio extra y disponibilidad.
       </p>
 
-      <div className="mt-8 space-y-8">
+      <div className="mt-6">
+        <BarSelector
+          tipos={tipos}
+          activo={activo?.slug ?? ""}
+          basePath="/admin/productos"
+        />
+      </div>
+
+      {grupos.size === 0 && (
+        <p className="text-muted">Esta barra aún no tiene productos.</p>
+      )}
+
+      <div className="space-y-8">
         {[...grupos.entries()].map(([categoria, items]) => (
           <section key={categoria}>
             <h2 className="mb-3 font-semibold uppercase tracking-wide text-faint">

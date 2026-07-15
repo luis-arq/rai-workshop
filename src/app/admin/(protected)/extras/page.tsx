@@ -1,5 +1,7 @@
 import { sql } from "@/lib/db";
+import { getTiposBarra } from "@/lib/db-catalog";
 import { updateExtra } from "@/lib/admin-actions";
+import BarSelector from "@/components/admin/BarSelector";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +13,20 @@ interface Row {
   disponible: boolean;
 }
 
-export default async function ExtrasPage() {
-  const rows = (await sql`
-    select id, nombre, emoji, precio, disponible
-    from extras order by orden`) as unknown as Row[];
+export default async function ExtrasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ barra?: string }>;
+}) {
+  const { barra } = await searchParams;
+  const tipos = await getTiposBarra();
+  const activo = tipos.find((t) => t.slug === barra) ?? tipos[0];
+
+  const rows = activo
+    ? ((await sql`
+        select id, nombre, emoji, precio, disponible
+        from extras where tipo_barra_id = ${activo.id} order by orden`) as unknown as Row[])
+    : [];
 
   return (
     <div>
@@ -25,7 +37,19 @@ export default async function ExtrasPage() {
         Cada extra suma su precio a la cotización cuando el cliente lo elige.
       </p>
 
-      <div className="mt-8 space-y-2">
+      <div className="mt-6">
+        <BarSelector
+          tipos={tipos}
+          activo={activo?.slug ?? ""}
+          basePath="/admin/extras"
+        />
+      </div>
+
+      {rows.length === 0 && (
+        <p className="text-muted">Esta barra aún no tiene extras.</p>
+      )}
+
+      <div className="space-y-2">
         {rows.map((e) => (
           <form
             key={e.id}

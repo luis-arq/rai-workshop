@@ -4,19 +4,18 @@ import { sql } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 async function getStats() {
-  const [[prod], [extra], [paq], [cot], [nuevas]] = await Promise.all([
+  const [[prod], [cot], [nuevas], [barras]] = await Promise.all([
     sql`select count(*)::int n from productos`,
-    sql`select count(*)::int n from extras`,
-    sql`select count(*)::int n from paquetes`,
     sql`select count(*)::int n from cotizaciones`,
     sql`select count(*)::int n from cotizaciones where estado = 'nueva'`,
+    sql`select count(*) filter (where activo)::int activas, count(*)::int total from tipos_barra`,
   ]);
   return {
     productos: prod.n,
-    extras: extra.n,
-    paquetes: paq.n,
     cotizaciones: cot.n,
     nuevas: nuevas.n,
+    barrasActivas: barras.activas,
+    barrasTotal: barras.total,
   };
 }
 
@@ -30,9 +29,14 @@ export default async function AdminDashboard() {
       valor: stats.cotizaciones,
       hint: stats.nuevas > 0 ? `${stats.nuevas} nueva${stats.nuevas === 1 ? "" : "s"} por revisar` : "Leads recibidos",
     },
-    { href: "/admin/productos", label: "Productos", valor: stats.productos, hint: "Papas, gomitas, cacahuates y frutas" },
-    { href: "/admin/extras", label: "Extras", valor: stats.extras, hint: "Chamoy, decoración, personal…" },
-    { href: "/admin/paquetes", label: "Paquetes", valor: stats.paquetes, hint: "Precios base y por invitado" },
+    {
+      href: "/admin/barras",
+      label: "Barras",
+      valor: `${stats.barrasActivas}/${stats.barrasTotal}`,
+      hint: "Tipos de barra habilitados",
+    },
+    { href: "/admin/productos", label: "Productos", valor: stats.productos, hint: "Edita por barra" },
+    { href: "/admin/paquetes", label: "Paquetes", valor: "—", hint: "Precios por barra" },
   ];
 
   return (

@@ -1,6 +1,5 @@
 // Acceso a datos del catálogo (SOLO servidor — usa DATABASE_URL).
-// Mapea las filas de Supabase a los mismos tipos que usa el wizard,
-// usando `slug` como id estable. Reemplaza al catálogo estático.
+// El catálogo ahora está segmentado por tipo de barra.
 
 import { sql } from "@/lib/db";
 import type {
@@ -11,24 +10,63 @@ import type {
   Extra,
   Paquete,
   Producto,
+  TipoBarra,
 } from "@/lib/types";
 
-export async function getCatalogo(): Promise<Catalogo> {
+// Tipos de barra activos (para el selector del cliente).
+export async function getTiposBarraActivos(): Promise<TipoBarra[]> {
+  const rows = await sql`
+    select id, slug, nombre, emoji, descripcion, activo
+    from tipos_barra where activo = true order by orden`;
+  return rows.map(mapTipo);
+}
+
+// Todos los tipos (para el admin).
+export async function getTiposBarra(): Promise<TipoBarra[]> {
+  const rows = await sql`
+    select id, slug, nombre, emoji, descripcion, activo
+    from tipos_barra order by orden`;
+  return rows.map(mapTipo);
+}
+
+export async function getTipoBarraPorSlug(
+  slug: string
+): Promise<TipoBarra | null> {
+  const [row] = await sql`
+    select id, slug, nombre, emoji, descripcion, activo
+    from tipos_barra where slug = ${slug}`;
+  return row ? mapTipo(row) : null;
+}
+
+function mapTipo(r: Record<string, unknown>): TipoBarra {
+  return {
+    id: r.id as string,
+    slug: r.slug as string,
+    nombre: r.nombre as string,
+    emoji: (r.emoji as string) ?? "🍿",
+    descripcion: (r.descripcion as string) ?? "",
+    activo: r.activo as boolean,
+  };
+}
+
+// Catálogo de UN tipo de barra.
+export async function getCatalogo(tipoBarraId: string): Promise<Catalogo> {
   const [cats, prods, paqs, limites, extras] = await Promise.all([
     sql`select id, slug, nombre, instruccion, limite_default, orden
-        from categorias where activa order by orden`,
-    sql`select id, categoria_id, slug, nombre, emoji, disponible, orden
-        from productos order by orden`,
+        from categorias where activa and tipo_barra_id = ${tipoBarraId} order by orden`,
+    sql`select p.id, p.categoria_id, p.slug, p.nombre, p.emoji, p.disponible, p.orden
+        from productos p join categorias c on c.id = p.categoria_id
+        where c.tipo_barra_id = ${tipoBarraId} order by p.orden`,
     sql`select id, slug, nombre, descripcion, precio_base, precio_por_invitado,
                recipientes, servicios, destacado, orden
-        from paquetes where activo order by orden`,
+        from paquetes where activo and tipo_barra_id = ${tipoBarraId} order by orden`,
     sql`select pl.paquete_id, c.slug as categoria_slug, pl.limite
-        from paquete_limites pl join categorias c on c.id = pl.categoria_id`,
+        from paquete_limites pl join categorias c on c.id = pl.categoria_id
+        where c.tipo_barra_id = ${tipoBarraId}`,
     sql`select slug, nombre, emoji, precio, disponible, orden
-        from extras order by orden`,
+        from extras where tipo_barra_id = ${tipoBarraId} order by orden`,
   ]);
 
-  // Productos agrupados por categoría
   const porCategoria = new Map<string, Producto[]>();
   for (const p of prods) {
     const arr = porCategoria.get(p.categoria_id) ?? [];
@@ -49,7 +87,6 @@ export async function getCatalogo(): Promise<Catalogo> {
     productos: porCategoria.get(c.id) ?? [],
   }));
 
-  // Límites por paquete → { categoriaSlug: limite }
   const limitesPorPaquete = new Map<string, Partial<Record<CategoriaId, number>>>();
   for (const l of limites) {
     const m = limitesPorPaquete.get(l.paquete_id) ?? {};

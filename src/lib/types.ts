@@ -2,7 +2,18 @@
 // Hoy el catálogo vive en catalog.ts; mañana estas mismas formas se leerán
 // desde Supabase sin cambiar la UI.
 
-export type CategoriaId = "papas" | "gomitas" | "cacahuates" | "frutas";
+// Ahora las categorías son dinámicas (cada barra tiene las suyas), así que el
+// id de categoría es un slug libre.
+export type CategoriaId = string;
+
+export interface TipoBarra {
+  id: string;
+  slug: string;
+  nombre: string;
+  emoji: string;
+  descripcion: string;
+  activo: boolean;
+}
 
 export interface Producto {
   id: string;

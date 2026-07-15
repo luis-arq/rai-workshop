@@ -56,6 +56,21 @@ export async function updatePaquete(formData: FormData) {
   revalidatePath("/admin/paquetes");
 }
 
+export async function updateTipoBarra(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const emoji = String(formData.get("emoji") ?? "").trim();
+  const activo = formData.get("activo") === "on";
+  if (!id || !nombre) return;
+  await sql`
+    update tipos_barra
+    set nombre = ${nombre}, emoji = ${emoji}, activo = ${activo}
+    where id = ${id}`;
+  revalidatePath("/admin/barras");
+  revalidatePath("/configura");
+}
+
 export async function updateAjustes(formData: FormData) {
   await requireAdmin();
   const whatsapp = String(formData.get("whatsapp") ?? "").replace(/\D/g, "");

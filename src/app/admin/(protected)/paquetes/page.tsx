@@ -1,5 +1,7 @@
 import { sql } from "@/lib/db";
+import { getTiposBarra } from "@/lib/db-catalog";
 import { updatePaquete } from "@/lib/admin-actions";
+import BarSelector from "@/components/admin/BarSelector";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +14,20 @@ interface Row {
   recipientes: number;
 }
 
-export default async function PaquetesPage() {
-  const rows = (await sql`
-    select id, nombre, descripcion, precio_base, precio_por_invitado, recipientes
-    from paquetes order by orden`) as unknown as Row[];
+export default async function PaquetesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ barra?: string }>;
+}) {
+  const { barra } = await searchParams;
+  const tipos = await getTiposBarra();
+  const activo = tipos.find((t) => t.slug === barra) ?? tipos[0];
+
+  const rows = activo
+    ? ((await sql`
+        select id, nombre, descripcion, precio_base, precio_por_invitado, recipientes
+        from paquetes where tipo_barra_id = ${activo.id} order by orden`) as unknown as Row[])
+    : [];
 
   return (
     <div>
@@ -27,7 +39,19 @@ export default async function PaquetesPage() {
         extras.
       </p>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-6">
+        <BarSelector
+          tipos={tipos}
+          activo={activo?.slug ?? ""}
+          basePath="/admin/paquetes"
+        />
+      </div>
+
+      {rows.length === 0 && (
+        <p className="text-muted">Esta barra aún no tiene paquetes.</p>
+      )}
+
+      <div className="space-y-3">
         {rows.map((p) => (
           <form
             key={p.id}
