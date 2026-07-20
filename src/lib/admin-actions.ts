@@ -14,6 +14,108 @@ function num(v: FormDataEntryValue | null): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+function slugify(s: string): string {
+  const base = s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  return `${base || "item"}-${Date.now().toString(36).slice(-4)}`;
+}
+
+// ---- Crear / eliminar productos ----
+export async function crearProducto(formData: FormData) {
+  await requireAdmin();
+  const categoriaId = String(formData.get("categoria_id"));
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  if (!categoriaId || !nombre) return;
+  const [{ orden }] = await sql`
+    select coalesce(max(orden), -1) + 1 as orden from productos where categoria_id = ${categoriaId}`;
+  await sql`
+    insert into productos (categoria_id, slug, nombre, emoji, orden)
+    values (${categoriaId}, ${slugify(nombre)}, ${nombre}, '🍬', ${orden})`;
+  revalidatePath("/admin/productos");
+  revalidatePath("/configura");
+}
+
+export async function eliminarProducto(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  if (!id) return;
+  await sql`delete from productos where id = ${id}`;
+  revalidatePath("/admin/productos");
+  revalidatePath("/configura");
+}
+
+// ---- Crear / eliminar extras ----
+export async function crearExtra(formData: FormData) {
+  await requireAdmin();
+  const tipoBarraId = String(formData.get("tipo_barra_id"));
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const precio = num(formData.get("precio"));
+  if (!tipoBarraId || !nombre) return;
+  const [{ orden }] = await sql`
+    select coalesce(max(orden), -1) + 1 as orden from extras where tipo_barra_id = ${tipoBarraId}`;
+  await sql`
+    insert into extras (tipo_barra_id, slug, nombre, emoji, precio, orden)
+    values (${tipoBarraId}, ${slugify(nombre)}, ${nombre}, '✨', ${precio}, ${orden})`;
+  revalidatePath("/admin/extras");
+  revalidatePath("/configura");
+}
+
+export async function eliminarExtra(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  if (!id) return;
+  await sql`delete from extras where id = ${id}`;
+  revalidatePath("/admin/extras");
+  revalidatePath("/configura");
+}
+
+// ---- Crear / eliminar barras ----
+export async function crearTipoBarra(formData: FormData) {
+  await requireAdmin();
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const emoji = String(formData.get("emoji") ?? "").trim() || "🍽️";
+  if (!nombre) return;
+  const [{ orden }] = await sql`select coalesce(max(orden), -1) + 1 as orden from tipos_barra`;
+  // Nace deshabilitada (aún sin productos).
+  const [tb] = await sql`
+    insert into tipos_barra (slug, nombre, emoji, activo, orden)
+    values (${slugify(nombre)}, ${nombre}, ${emoji}, false, ${orden})
+    returning id`;
+
+  // Sembramos una categoría y un paquete inicial para que sea usable.
+  const [cat] = await sql`
+    insert into categorias (slug, nombre, instruccion, limite_default, orden, tipo_barra_id)
+    values (${slugify("productos")}, 'Productos', 'Elige tus productos.', 3, 0, ${tb.id})
+    returning id`;
+  const [paq] = await sql`
+    insert into paquetes (slug, nombre, descripcion, precio_base, precio_por_invitado,
+                          recipientes, servicios, destacado, orden, tipo_barra_id)
+    values (${slugify("basico")}, 'Básico', ${nombre}, 2500, 40, 6,
+            ${sql.json([])}, false, 0, ${tb.id})
+    returning id`;
+  await sql`
+    insert into paquete_limites (paquete_id, categoria_id, limite)
+    values (${paq.id}, ${cat.id}, 3)`;
+
+  revalidatePath("/admin/barras");
+}
+
+export async function eliminarTipoBarra(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  if (!id) return;
+  // Las cotizaciones ya no apuntan a esta barra; su catálogo se borra en cascada.
+  await sql`update cotizaciones set tipo_barra_id = null where tipo_barra_id = ${id}`;
+  await sql`delete from tipos_barra where id = ${id}`;
+  revalidatePath("/admin/barras");
+  revalidatePath("/configura");
+}
+
 export async function updateProducto(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id"));
