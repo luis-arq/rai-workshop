@@ -232,6 +232,81 @@ export async function updateEstadoCotizacion(formData: FormData) {
   revalidatePath("/admin/cotizaciones");
 }
 
+// ---- Usuarios admin ----
+// Crea (o actualiza la contraseña de) un usuario admin directamente en
+// Supabase Auth. Reutiliza la lógica probada de db/create-admin.mjs.
+export async function crearUsuario(formData: FormData) {
+  await requireAdmin();
+  const correo = String(formData.get("correo") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  if (!correo || password.length < 6) return;
+
+  const [{ schema }] = await sql`
+    select n.nspname as schema from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where p.proname = 'crypt' limit 1`;
+  const crypt = (pw: string) =>
+    sql`${sql(schema)}.crypt(${pw}::text, ${sql(schema)}.gen_salt('bf'::text))`;
+
+  const [existente] = await sql`select id from auth.users where email = ${correo}`;
+  let id: string;
+  if (existente) {
+    id = existente.id;
+    await sql`
+      update auth.users set encrypted_password = ${crypt(password)},
+        updated_at = now(), email_confirmed_at = coalesce(email_confirmed_at, now())
+      where id = ${id}`;
+  } else {
+    const [row] = await sql`
+      insert into auth.users (
+        id, instance_id, aud, role, email, encrypted_password,
+        email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data
+      ) values (
+        gen_random_uuid(), '00000000-0000-0000-0000-000000000000',
+        'authenticated', 'authenticated', ${correo}, ${crypt(password)},
+        now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}'
+      ) returning id`;
+    id = row.id;
+  }
+
+  // GoTrue exige cadenas vacías (no NULL) en columnas de token.
+  await sql`
+    update auth.users set
+      confirmation_token = coalesce(confirmation_token, ''),
+      recovery_token = coalesce(recovery_token, ''),
+      email_change = coalesce(email_change, ''),
+      email_change_token_new = coalesce(email_change_token_new, ''),
+      email_change_token_current = coalesce(email_change_token_current, ''),
+      phone_change = coalesce(phone_change, ''),
+      phone_change_token = coalesce(phone_change_token, ''),
+      reauthentication_token = coalesce(reauthentication_token, '')
+    where id = ${id}`;
+
+  const [ident] = await sql`
+    select 1 from auth.identities where user_id = ${id} and provider = 'email'`;
+  if (!ident) {
+    await sql`
+      insert into auth.identities (
+        id, provider_id, user_id, identity_data, provider,
+        last_sign_in_at, created_at, updated_at
+      ) values (
+        gen_random_uuid(), ${correo}, ${id},
+        jsonb_build_object('sub', ${id}::text, 'email', ${correo}),
+        'email', now(), now(), now()
+      )`;
+  }
+  revalidatePath("/admin/usuarios");
+}
+
+export async function eliminarUsuario(formData: FormData) {
+  const yo = await requireAdmin();
+  const id = String(formData.get("id"));
+  if (!id || id === yo.id) return; // no permitir borrarse a sí mismo
+  await sql`delete from auth.identities where user_id = ${id}`;
+  await sql`delete from auth.users where id = ${id}`;
+  revalidatePath("/admin/usuarios");
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
