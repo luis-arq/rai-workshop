@@ -54,7 +54,7 @@ export async function getCatalogo(tipoBarraId: string): Promise<Catalogo> {
   const [cats, prods, paqs, limites, extras] = await Promise.all([
     sql`select id, slug, nombre, instruccion, limite_default, orden
         from categorias where activa and tipo_barra_id = ${tipoBarraId} order by orden`,
-    sql`select p.id, p.categoria_id, p.slug, p.nombre, p.emoji, p.disponible, p.orden
+    sql`select p.id, p.categoria_id, p.slug, p.nombre, p.emoji, p.imagen_url, p.disponible, p.orden
         from productos p join categorias c on c.id = p.categoria_id
         where c.tipo_barra_id = ${tipoBarraId} order by p.orden`,
     sql`select id, slug, nombre, descripcion, precio_base, precio_por_invitado,
@@ -74,6 +74,7 @@ export async function getCatalogo(tipoBarraId: string): Promise<Catalogo> {
       id: p.slug,
       nombre: p.nombre,
       emoji: p.emoji ?? "🍬",
+      imagenUrl: p.imagen_url ?? null,
       disponible: p.disponible,
     });
     porCategoria.set(p.categoria_id, arr);

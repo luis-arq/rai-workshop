@@ -19,6 +19,7 @@ export interface Producto {
   id: string;
   nombre: string;
   emoji: string;
+  imagenUrl?: string | null;
   disponible: boolean;
 }
 

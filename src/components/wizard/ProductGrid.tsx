@@ -42,9 +42,18 @@ export default function ProductGrid({
                   : "border-line bg-surface hover:-translate-y-0.5 hover:border-chamoy/50 hover:shadow-md",
             ].join(" ")}
           >
-            <span className="text-2xl" aria-hidden>
-              {p.emoji}
-            </span>
+            {p.imagenUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={p.imagenUrl}
+                alt=""
+                className="h-10 w-10 shrink-0 rounded-lg object-cover"
+              />
+            ) : (
+              <span className="text-2xl" aria-hidden>
+                {p.emoji}
+              </span>
+            )}
             <span className="flex-1 text-sm font-semibold leading-tight">
               {p.nombre}
             </span>

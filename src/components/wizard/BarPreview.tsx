@@ -13,12 +13,23 @@ export default function BarPreview({
   seleccion: Seleccion;
   catalogo: Catalogo;
 }) {
-  const items: { id: string; emoji: string; nombre: string }[] = [];
+  const items: {
+    id: string;
+    emoji: string;
+    nombre: string;
+    imagenUrl?: string | null;
+  }[] = [];
 
   for (const cat of catalogo.categorias) {
     for (const id of seleccion.productos[cat.id] ?? []) {
       const p = productoDe(catalogo, id);
-      if (p) items.push({ id: p.id, emoji: p.emoji, nombre: p.nombre });
+      if (p)
+        items.push({
+          id: p.id,
+          emoji: p.emoji,
+          nombre: p.nombre,
+          imagenUrl: p.imagenUrl,
+        });
     }
   }
   for (const id of seleccion.extras) {
@@ -45,9 +56,18 @@ export default function BarPreview({
           <div
             key={`${it.id}-${i}`}
             title={it.nombre}
-            className="animate-pop flex aspect-square items-center justify-center rounded-xl border border-line bg-surface text-2xl shadow-sm"
+            className="animate-pop flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-line bg-surface text-2xl shadow-sm"
           >
-            {it.emoji}
+            {it.imagenUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={it.imagenUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              it.emoji
+            )}
           </div>
         ))}
         {Array.from({ length: vacios }).map((_, i) => (

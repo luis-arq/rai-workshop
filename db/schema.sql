@@ -21,6 +21,7 @@ create table if not exists productos (
   slug text not null,
   nombre text not null,
   emoji text,
+  imagen_url text,
   precio_extra numeric(10,2) not null default 0,
   disponible boolean not null default true,
   orden int not null default 0,

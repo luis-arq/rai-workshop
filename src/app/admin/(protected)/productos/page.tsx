@@ -9,6 +9,7 @@ interface Row {
   id: string;
   nombre: string;
   emoji: string | null;
+  imagen_url: string | null;
   precio_extra: string;
   disponible: boolean;
   categoria: string;
@@ -25,7 +26,7 @@ export default async function ProductosPage({
 
   const rows = activo
     ? ((await sql`
-        select p.id, p.nombre, p.emoji, p.precio_extra, p.disponible,
+        select p.id, p.nombre, p.emoji, p.imagen_url, p.precio_extra, p.disponible,
                c.nombre as categoria
         from productos p join categorias c on c.id = p.categoria_id
         where c.tipo_barra_id = ${activo.id}
@@ -74,12 +75,23 @@ export default async function ProductosPage({
                   className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface p-3"
                 >
                   <input type="hidden" name="id" value={p.id} />
+                  {p.imagen_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={p.imagen_url}
+                      alt=""
+                      className="h-11 w-11 shrink-0 rounded-lg border border-line object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 text-xl">
+                      {p.emoji}
+                    </span>
+                  )}
                   <input
-                    name="emoji"
-                    defaultValue={p.emoji ?? ""}
-                    aria-label="Emoji"
-                    maxLength={4}
-                    className="w-14 rounded-lg border border-line bg-surface px-2 py-2 text-center text-xl outline-none focus:border-chamoy"
+                    type="file"
+                    name="imagen"
+                    accept="image/*"
+                    className="w-40 text-xs text-muted file:mr-2 file:rounded-full file:border-0 file:bg-chamoy/10 file:px-3 file:py-1.5 file:font-semibold file:text-chamoy"
                   />
                   <input
                     name="nombre"

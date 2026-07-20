@@ -18,16 +18,42 @@ export async function updateProducto(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id"));
   const nombre = String(formData.get("nombre") ?? "").trim();
-  const emoji = String(formData.get("emoji") ?? "").trim();
   const precio = num(formData.get("precio_extra"));
   const disponible = formData.get("disponible") === "on";
   if (!id || !nombre) return;
+
   await sql`
     update productos
-    set nombre = ${nombre}, emoji = ${emoji}, precio_extra = ${precio},
-        disponible = ${disponible}
+    set nombre = ${nombre}, precio_extra = ${precio}, disponible = ${disponible}
     where id = ${id}`;
+
+  // Imagen opcional → Supabase Storage.
+  const imagen = formData.get("imagen");
+  if (imagen instanceof File && imagen.size > 0) {
+    const url = await subirImagen("productos", `p/${id}`, imagen);
+    if (url) await sql`update productos set imagen_url = ${url} where id = ${id}`;
+  }
+
   revalidatePath("/admin/productos");
+  revalidatePath("/configura");
+}
+
+// Sube un archivo al bucket y regresa la URL pública (con versión para
+// evitar caché). Regresa null si algo falla.
+async function subirImagen(
+  bucket: string,
+  base: string,
+  file: File
+): Promise<string | null> {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${base}.${ext}`;
+  const supabase = await createClient();
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
+  if (error) return null;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`;
 }
 
 export async function updateExtra(formData: FormData) {
