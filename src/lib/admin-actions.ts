@@ -74,6 +74,44 @@ export async function eliminarExtra(formData: FormData) {
   revalidatePath("/configura");
 }
 
+// ---- Crear / eliminar paquetes ----
+export async function crearPaquete(formData: FormData) {
+  await requireAdmin();
+  const tipoBarraId = String(formData.get("tipo_barra_id"));
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const base = num(formData.get("precio_base"));
+  const porInv = num(formData.get("precio_por_invitado"));
+  if (!tipoBarraId || !nombre) return;
+  const [{ orden }] = await sql`
+    select coalesce(max(orden), -1) + 1 as orden from paquetes where tipo_barra_id = ${tipoBarraId}`;
+  const [paq] = await sql`
+    insert into paquetes (slug, nombre, descripcion, precio_base, precio_por_invitado,
+                          recipientes, servicios, destacado, orden, tipo_barra_id)
+    values (${slugify(nombre)}, ${nombre}, '', ${base}, ${porInv}, 6,
+            ${sql.json([])}, false, ${orden}, ${tipoBarraId})
+    returning id`;
+  // Límites por categoría = el default de cada categoría de la barra.
+  const cats = await sql`
+    select id, limite_default from categorias where tipo_barra_id = ${tipoBarraId}`;
+  for (const c of cats) {
+    await sql`
+      insert into paquete_limites (paquete_id, categoria_id, limite)
+      values (${paq.id}, ${c.id}, ${c.limite_default})
+      on conflict (paquete_id, categoria_id) do nothing`;
+  }
+  revalidatePath("/admin/paquetes");
+  revalidatePath("/configura");
+}
+
+export async function eliminarPaquete(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  if (!id) return;
+  await sql`delete from paquetes where id = ${id}`;
+  revalidatePath("/admin/paquetes");
+  revalidatePath("/configura");
+}
+
 // ---- Crear / eliminar barras ----
 export async function crearTipoBarra(formData: FormData) {
   await requireAdmin();
