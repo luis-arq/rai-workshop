@@ -74,9 +74,13 @@ export default async function ProductosPage({
                   className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface p-3"
                 >
                   <input type="hidden" name="id" value={p.id} />
-                  <span className="text-2xl" aria-hidden>
-                    {p.emoji}
-                  </span>
+                  <input
+                    name="emoji"
+                    defaultValue={p.emoji ?? ""}
+                    aria-label="Emoji"
+                    maxLength={4}
+                    className="w-14 rounded-lg border border-line bg-surface px-2 py-2 text-center text-xl outline-none focus:border-chamoy"
+                  />
                   <input
                     name="nombre"
                     defaultValue={p.nombre}

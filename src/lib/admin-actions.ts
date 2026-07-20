@@ -18,12 +18,14 @@ export async function updateProducto(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id"));
   const nombre = String(formData.get("nombre") ?? "").trim();
+  const emoji = String(formData.get("emoji") ?? "").trim();
   const precio = num(formData.get("precio_extra"));
   const disponible = formData.get("disponible") === "on";
   if (!id || !nombre) return;
   await sql`
     update productos
-    set nombre = ${nombre}, precio_extra = ${precio}, disponible = ${disponible}
+    set nombre = ${nombre}, emoji = ${emoji}, precio_extra = ${precio},
+        disponible = ${disponible}
     where id = ${id}`;
   revalidatePath("/admin/productos");
 }
@@ -32,12 +34,14 @@ export async function updateExtra(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id"));
   const nombre = String(formData.get("nombre") ?? "").trim();
+  const emoji = String(formData.get("emoji") ?? "").trim();
   const precio = num(formData.get("precio"));
   const disponible = formData.get("disponible") === "on";
   if (!id || !nombre) return;
   await sql`
     update extras
-    set nombre = ${nombre}, precio = ${precio}, disponible = ${disponible}
+    set nombre = ${nombre}, emoji = ${emoji}, precio = ${precio},
+        disponible = ${disponible}
     where id = ${id}`;
   revalidatePath("/admin/extras");
 }
